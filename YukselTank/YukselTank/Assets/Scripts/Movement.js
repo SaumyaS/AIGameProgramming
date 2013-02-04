@@ -25,8 +25,12 @@ public var bMultiShotEnabled : boolean = false;
 
 //Finders variables
 public var FeelerDistance : float = 2.0f;
+public var FrontHit : float = -1f;
+public var RightHit : float = -1f;
+public var LeftHit : float = -1f;
 
 
+public var hit : RaycastHit;
 
 function Start () 
 {
@@ -58,8 +62,44 @@ function Update () {
 
 function Finders()
 {
-	if(Physics.Raycast(transform.position, transform.forward, FeelerDistance))
+	// Other two rayCasts
+	var leftRay = transform.position + Vector3(-0.125, 0, 0);
+    var rightRay = transform.position + Vector3(0.125, 0, 0);
+    
+     
+    
+    
+    
 	
+	if(Physics.Raycast(transform.position, transform.forward, hit, FeelerDistance)){
+	
+		
+        Debug.DrawLine (transform.position, hit.point, Color.white);
+		FrontHit = hit.distance;	
+		print("Hello");
+	
+	}
+	
+	
+	
+	if(Physics.Raycast(leftRay, transform.forward, hit, FeelerDistance)){
+	
+         Debug.DrawLine (leftRay, hit.point, Color.red);
+ 
+         
+         
+		LeftHit = hit.distance;
+	}
+	
+	if(Physics.Raycast(rightRay, transform.forward, hit, FeelerDistance)){
+	
+         Debug.DrawLine (rightRay, hit.point, Color.green);
+ 
+         
+         
+		RightHit = hit.distance;
+	
+	}
 	/*
 	function Update () 
 	{
@@ -80,9 +120,14 @@ function Finders()
 
 function Movement()
 {
+
+	transform.eulerAngles.x=0;
 	//forwards
 	if(Input.GetKey(KeyCode.W))
 	{
+		
+		
+		
 		transform.Translate((Vector3.forward * Time.deltaTime) * SpeedMult);
 	}
 	//backwards
@@ -92,11 +137,17 @@ function Movement()
 	}	
 	if(Input.GetKey(KeyCode.A))
 	{
-		transform.Rotate(-Vector3.up * Time.deltaTime*50);
+		if(Input.GetKey(KeyCode.S))
+			transform.Rotate(Vector3.up * Time.deltaTime*50);
+		else
+			transform.Rotate(-Vector3.up * Time.deltaTime*50);
 	}
 	if(Input.GetKey(KeyCode.D))
 	{
-		transform.Rotate(Vector3.up * Time.deltaTime*50);
+		if(Input.GetKey(KeyCode.S))
+			transform.Rotate(-Vector3.up * Time.deltaTime*50);
+		else
+			transform.Rotate(Vector3.up * Time.deltaTime*50);
 	}
 	
 	//TURRT ROTATION

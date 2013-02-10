@@ -24,11 +24,14 @@ private var PowerUpTimer : float = 0.0f;
 public var bMultiShotEnabled : boolean = false;
 
 //Finders variables
-public var FeelerDistance : float = 2.0f;
+public var FeelerDistance : float = 4.0f;
 public var FrontHit : float = -1f;
 public var RightHit : float = -1f;
 public var LeftHit : float = -1f;
 
+//constants
+public var HIT_MASK : int = 0;
+public var IGNORE_LAYER : int = 2;
 
 public var hit : RaycastHit;
 
@@ -63,8 +66,9 @@ function Update () {
 function Finders()
 {
 	// Other two rayCasts
-	var leftRay = transform.position + Vector3(-0.125, 0, 0);
-    var rightRay = transform.position + Vector3(0.125, 0, 0);
+	var leftRay = Quaternion.Euler(0, -30, 0) * transform.forward;
+    var rightRay = Quaternion.Euler(0, 30, 0) * transform.forward;
+    
     
      
     
@@ -76,24 +80,24 @@ function Finders()
 		
         Debug.DrawLine (transform.position, hit.point, Color.white);
 		FrontHit = hit.distance;	
-		print("Hello");
+		//print("Hello");
 	
 	}
 	
 	
 	
-	if(Physics.Raycast(leftRay, transform.forward, hit, FeelerDistance)){
+	if(Physics.Raycast(transform.position, leftRay, hit, FeelerDistance)){
 	
-         Debug.DrawLine (leftRay, hit.point, Color.red);
+         Debug.DrawLine (transform.position, hit.point, Color.red);
  
          
          
 		LeftHit = hit.distance;
 	}
 	
-	if(Physics.Raycast(rightRay, transform.forward, hit, FeelerDistance)){
+	if(Physics.Raycast(transform.position, rightRay, hit, FeelerDistance)){
 	
-         Debug.DrawLine (rightRay, hit.point, Color.green);
+         Debug.DrawLine (transform.position, hit.point, Color.green);
  
          
          
@@ -122,6 +126,7 @@ function Movement()
 {
 
 	transform.eulerAngles.x=0;
+	transform.eulerAngles.z=0;
 	//forwards
 	if(Input.GetKey(KeyCode.W))
 	{
@@ -173,9 +178,125 @@ function Movement()
 	
 	}
 	
+	var Colliders : Collider[];
+	//Get all objects withing a radius
+	Colliders = Physics.OverlapSphere(transform.position, 4, 1);
+	//Iterate through each object found
+	for(var i : int = 0; i<Colliders.length; i++)
+	{
+		var otherObject : GameObject = Colliders[i].gameObject; 
+		// Is the object an EnemyTank?
+		if( otherObject.tag == "EnemyTank")
+		{
+			var hitInfo : RaycastHit;
+			var layerMask : int = 1 << HIT_MASK;
+			//Linecast from playerTank to EnemyTank. Only cast on objects in layer 0. Store data in hitInfo
+			if ( Physics.Linecast(transform.position, otherObject.transform.position, hitInfo, layerMask ) )
+			{
+				var hitObject : GameObject =  hitInfo.collider.gameObject;
+				//Ensure that the object hit in the raycast is an EnemyTank
+				if( hitObject.tag == "EnemyTank" )
+				{
+					//Calculate direction, heading, and distance.
+					var direction : Vector3 = otherObject.transform.position - transform.position; 
+					var heading : float = Vector3.Angle( direction, transform.forward ); 
+					var distance : float = direction.magnitude; 
+					//Was the object hit(hitObject) the same object as the object in the radius(otherObject)
+					if( hitObject == otherObject )
+					{ 
+						//Set object to ignore so the next iteration won't hit it
+						hitObject.layer = IGNORE_LAYER; 
+						//Print object data
+						PrintData( hitObject.name, distance, heading );
+						Debug.DrawLine (transform.position, hitObject.transform.position, Color.magenta);
+					}
+					else
+					{
+						var isDifferentObject : boolean = true;
+						var hitObjectArr = new Array();
+						var hitArrLen : int = hitObjectArr.length;
+						//While the object we are hitting(hitObject) is not the same as (otherObject)
+						while( isDifferentObject )
+						{ 
+							//Ignore this object for now and add it to the ignore list
+							hitObject.layer = IGNORE_LAYER;
+							hitObjectArr.Add( hitObject );
+							//Cast again to see if we hit (otherObject)
+							if( Physics.Linecast(transform.position, otherObject.transform.position, hitInfo, layerMask ) )
+							{ 
+								hitObject =  hitInfo.collider.gameObject;
+								//Check to see if the object we hit was a tank
+								if( hitObject.tag == "EnemyTank" )
+								{
+									 //Check to see if it was the intended tank(otherObject)
+									 if( hitObject == otherObject )
+									 { 
+									 	//Loop through all objects set to ignore and reset them
+									 	for(var iHitObject : int = hitArrLen; iHitObject >= 0 ; iHitObject--)
+									 	{
+									 		var tempObj1 : GameObject = hitObjectArr[ iHitObject ];
+									 		if( tempObj1 != null ) 
+									 		{
+									 			tempObj1.layer = HIT_MASK;
+									 		}
+									 	}
+									 	//Print out data for otherObject
+									 	PrintData( otherObject.name, distance, heading );  
+									 	Debug.DrawLine (transform.position, hitObject.transform.position, Color.magenta);
+									 	//Break out of the loop as we found the intended object.
+									 	isDifferentObject = false;
+									 }
+								}
+								else
+								{
+									//Loop through all objects set to ignore and reset them
+								 	for(var iHitObject2 : int = hitArrLen; iHitObject2 >= 0 ; iHitObject2--)
+								 	{
+								 		var tempObj2 : GameObject = hitObjectArr[ iHitObject ];
+								 		if( tempObj2 != null ) 
+								 		{
+								 			tempObj2.layer = HIT_MASK;
+								 		}
+								 	}
+									isDifferentObject = false;
+								}
+							}
+							else
+							{
+							 	for(var iHitObject3 : int = hitArrLen; iHitObject3 >= 0 ; iHitObject3--)
+							 	{
+							 		var tempObj3 : GameObject = hitObjectArr[ iHitObject ];
+							 		if( tempObj3 != null ) 
+							 		{
+							 			tempObj3.layer = HIT_MASK;
+							 		}
+							 	}
+								isDifferentObject = false;
+							}
+						}
+					}
+				}
+			}	
+		}
+		//print(otherObject.transform.name);
+	
+	}
+	
 	
 }
-
+ 
+ function PrintData( _name : String, _distance : float, _heading : float )
+ {
+ 	var outMsg : String = "Agent: ";
+	//Agent name
+	outMsg += _name;
+	//Append Distance
+	outMsg += ", Distance: " + _distance;
+	//Append Heading
+	outMsg += ", Heading: " + _heading + ".";
+	// Display msg
+	print( outMsg );
+ }
 
 function OnTriggerEnter(other : Collider) 
 {

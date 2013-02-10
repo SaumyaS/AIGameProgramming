@@ -28,7 +28,7 @@ public var FeelerDistance : float = 2.0f;
 public var FrontHit : float = -1f;
 public var RightHit : float = -1f;
 public var LeftHit : float = -1f;
-
+public var distanceToObstacle : float = -1f;
 
 public var hit : RaycastHit;
 
@@ -68,8 +68,16 @@ function Finders()
     
      
     
+    var p1 : Vector3 = transform.position;// + charCtrl.center;
+    // Cast a sphere wrapping character controller 10 meters forward, to see if it is about to hit anything
+    if (Physics.SphereCast (p1, transform.localScale.y / 2, transform.forward, hit, FeelerDistance)) {
+        distanceToObstacle = hit.distance;
+        Debug.DrawLine(transform.position, hit.point, Color.white);
+    }
     
     
+    
+    /*
 	
 	if(Physics.Raycast(transform.position, transform.forward, hit, FeelerDistance)){
 	
@@ -153,11 +161,11 @@ function Movement()
 	//TURRT ROTATION
 	if(Input.GetKey(KeyCode.Q))
 	{
-		Turret.Rotate(-Vector3.up * Time.deltaTime*50);
+		Turret.Rotate(-Vector3.up * Time.deltaTime*100);
 	}
 	if(Input.GetKey(KeyCode.E))
 	{
-		Turret.Rotate(Vector3.up * Time.deltaTime*50);
+		Turret.Rotate(Vector3.up * Time.deltaTime*100);
 	}
 	
 	if(Input.GetKeyDown(KeyCode.Space) && (FireTimePass >= FireRate))

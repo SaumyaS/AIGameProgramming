@@ -1,9 +1,9 @@
 #pragma strict
 
-
-public var BulletDmg : float = 10.0f;
+/* will be implemented later on.
+public var BulletDmg : float = 25.0f;
 public var BulletDmgMult : float = 1.0f;
-
+*/
 
 function Start () 
 {

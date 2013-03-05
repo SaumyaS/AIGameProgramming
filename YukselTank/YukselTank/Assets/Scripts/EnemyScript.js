@@ -7,6 +7,7 @@ function Start () {
 }
 
 function Update () {
+	//Please ignore this commented code.
 	/*if( hitOwner != null ) 
 	{
 		var isFound : boolean = false;
@@ -31,16 +32,6 @@ function Update () {
 	}*/
 	gameObject.layer = 0;
 }
-
-/*function DamageTaken(amount : float)
-{
-	Health -= 25;
-		
-	if(Health <= 0.0f)
-	{
-		Destroy(gameObject);
-	}
-}*/
 
 
 
